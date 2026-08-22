@@ -22,7 +22,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!-- Версии зависимостей берутся из spring-boot-starter-parent -->
     </properties>
 
     <dependencies>
@@ -38,6 +37,12 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- ВАЖНО: Валидация (для @NotBlank, @NotNull в DTO) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
         <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -51,7 +56,7 @@
             <artifactId>liquibase-core</artifactId>
         </dependency>
 
-        <!-- Cache (опционально, можно убрать, если не нужен) -->
+        <!-- Cache (опционально) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
@@ -87,7 +92,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok (удобство написания кода) -->
+        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -100,7 +105,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Testcontainers для тестов с реальной БД -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
@@ -121,14 +125,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
+                <!-- Убрал excludes для Lombok, так как в SB 3+ это лишнее -->
             </plugin>
 
             <!-- Компиляция Java 17 -->

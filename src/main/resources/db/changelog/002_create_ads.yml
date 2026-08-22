@@ -12,11 +12,6 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
               - column:
-                  name: user_id
-                  type: uuid
-                  constraints:
-                    nullable: false
-              - column:
                   name: title
                   type: varchar(255)
                   constraints:
@@ -24,11 +19,29 @@ databaseChangeLog:
               - column:
                   name: description
                   type: text
+                  constraints:
+                    nullable: false
               - column:
                   name: price
-                  type: numeric(10,2)
+                  type: numeric(10, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
+              - column:
+                  name: updated_at
+                  type: timestamp
               - addForeignKeyConstraint:
                   baseTableName: ads
                   baseColumnNames: user_id
                   referencedTableName: users
                   referencedColumnNames: id
+                  onDelete: CASCADE
+                  onUpdate: CASCADE
