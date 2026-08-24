@@ -17,7 +17,7 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
-                  name: user_id
+                  name: author_id
                   type: uuid
                   constraints:
                     nullable: false
@@ -42,7 +42,7 @@ databaseChangeLog:
                   onUpdate: CASCADE
               - addForeignKeyConstraint:
                   baseTableName: comments
-                  baseColumnNames: user_id
+                  baseColumnNames: author_id
                   referencedTableName: users
                   referencedColumnNames: id
                   onDelete: CASCADE

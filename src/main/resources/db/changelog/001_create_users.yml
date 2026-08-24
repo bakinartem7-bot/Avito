@@ -26,3 +26,7 @@ databaseChangeLog:
                   name: role
                   type: varchar(50)
                   defaultValue: 'USER'
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()

@@ -3,6 +3,7 @@ package org.example.ads.controller;
 import org.example.ads.dto.AdCreateDto;
 import org.example.ads.dto.AdDto;
 import org.example.ads.service.AdService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
@@ -36,4 +37,12 @@ public class AdController {
     public void deleteAd(@PathVariable UUID id, @RequestHeader("X-User-Id") UUID userId) {
         adService.deleteAd(id, userId);
     }
+
+    @PostMapping
+    public AdDto createAd(@RequestBody AdCreateDto dto) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID currentUserId = (UUID) auth.getPrincipal();
+        return adService.createAd(currentUserId, dto);
+    }
+
 }
