@@ -24,7 +24,6 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .claim("email", user.getEmail())
-                // .claim("role", user.getRole()) // закомментировано, чтобы не было ошибки getRole()
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMinutes * 60_000))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
@@ -32,7 +31,6 @@ public class JwtService {
     }
 
     public UUID extractSubject(String token) {
-        // В JJWT 0.12+ сначала делаем .build(), потом вызываем parseClaimsJws()
         JwtParser parser = Jwts.parser()
                 .setSigningKey(secretKey)
                 .build();

@@ -18,7 +18,6 @@ public class CommentController {
         this.commentService = commentService;
     }
 
-    // ✅ ПРАВИЛЬНО: получаем сущности, маппим в DTO, возвращаем DTO
     @GetMapping("/ad/{adId}")
     public List<CommentDto> getCommentsForAd(@PathVariable UUID adId) {
         List<org.example.ads.entity.Comment> comments = commentService.getCommentsForAd(adId);
@@ -28,7 +27,6 @@ public class CommentController {
                 .collect(Collectors.toList());
     }
 
-    // Пример создания комментария (тоже возвращаем DTO)
     @PostMapping("/ad/{adId}")
     public CommentDto createComment(
             @PathVariable UUID adId,
@@ -37,7 +35,6 @@ public class CommentController {
 
         org.example.ads.entity.Comment commentEntity = commentService.createComment(adId, authorId, text);
 
-        // ✅ Маппим одну сущность в DTO перед возвратом
         return org.example.ads.mapper.CommentMapper.TO_DTO.apply(commentEntity);
     }
 

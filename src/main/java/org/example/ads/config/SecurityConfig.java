@@ -1,5 +1,6 @@
-package org.example.ads.security;
+package org.example.ads.config;
 
+import org.example.ads.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
