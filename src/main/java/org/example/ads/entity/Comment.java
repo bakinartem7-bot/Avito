@@ -12,6 +12,10 @@ import org.example.ads.entity.Ad;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Сущность комментария. Соответствует таблице comments в БД.
+ */
+
 @Entity
 @Table(name = "comments")
 @Data
@@ -31,13 +35,23 @@ public class Comment {
     @JoinColumn(name = "ad_id", nullable = false)
     private Ad ad;
 
-    private String text;
+    @Column(name = "content", nullable = false)
+    private String content;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
     }
 }

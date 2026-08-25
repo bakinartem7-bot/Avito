@@ -9,6 +9,10 @@ import org.example.ads.entity.User;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Сущность объявления. Соответствует таблице ads в БД.
+ */
+
 @Entity
 @Table(name = "ads")
 @Data
@@ -30,8 +34,17 @@ public class Ad {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
     }
 }

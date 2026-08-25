@@ -7,6 +7,10 @@ import lombok.AllArgsConstructor;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Сущность пользователя. Соответствует таблице users в БД.
+ */
+
 @Entity
 @Table(name = "users")
 @Data
@@ -23,6 +27,9 @@ public class User {
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
+
+    @Column(name = "role", length = 50)
+    private String role = "USER";
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

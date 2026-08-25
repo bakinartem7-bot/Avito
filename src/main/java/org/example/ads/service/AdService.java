@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * Сервис объявлений. Содержит бизнес-логику создания, чтения и удаления объявлений,
+ * а также проверку прав доступа.
+ */
 @Service
 @Transactional
 public class AdService {
@@ -26,6 +30,14 @@ public class AdService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Создаёт объявление от имени пользователя.
+     *
+     * @param authorId ID пользователя-автора
+     * @param dto DTO с данными объявления
+     * @return DTO созданного объявления
+     * @throws NotFoundException если пользователь не найден
+     */
     public AdDto createAd(UUID authorId, AdCreateDto dto) {
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -40,18 +52,34 @@ public class AdService {
         return toDto(saved);
     }
 
+    /**
+     * Возвращает список всех объявлений в виде DTO.
+     */
     public List<AdDto> getAllAds() {
         return adRepository.findAll().stream()
                 .map(this::toDto)
                 .toList();
     }
 
+    /**
+     * Находит объявление по ID и возвращает его DTO.
+     *
+     * @throws NotFoundException если объявление не найдено
+     */
     public AdDto getAdById(UUID id) {
         Ad ad = adRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
         return toDto(ad);
     }
 
+    /**
+     * Удаляет объявление, если текущий пользователь является его автором.
+     *
+     * @param id ID объявления
+     * @param currentUserId ID текущего пользователя (из JWT)
+     * @throws AccessDeniedException если пользователь пытается удалить чужое объявление
+     * @throws NotFoundException если объявление не найдено
+     */
     public void deleteAd(UUID id, UUID currentUserId) {
         Ad ad = adRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
@@ -70,6 +98,7 @@ public class AdService {
         dto.setDescription(ad.getDescription());
         dto.setPrice(ad.getPrice());
         dto.setCreatedAt(ad.getCreatedAt());
+        dto.setUpdatedAt(ad.getUpdatedAt());
         return dto;
     }
 }

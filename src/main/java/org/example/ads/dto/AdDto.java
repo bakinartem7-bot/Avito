@@ -12,4 +12,5 @@ public class AdDto {
     private String description;
     private double price;
     private Instant createdAt;
+    private Instant updatedAt;
 }

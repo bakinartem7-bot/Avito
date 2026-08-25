@@ -17,7 +17,7 @@ public class CommentMapper {
         dto.setId(c.getId());
         dto.setAdId(c.getAd().getId());
         dto.setUserId(c.getAuthor().getId());
-        dto.setContent(c.getText());
+        dto.setContent(c.getContent());
         dto.setCreatedAt(c.getCreatedAt());
 
         return dto;
