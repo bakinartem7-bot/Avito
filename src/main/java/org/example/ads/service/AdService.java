@@ -81,6 +81,13 @@ public class AdService {
         adRepository.delete(ad);
     }
 
+    @Transactional
+    public void deleteAnyAd(UUID id) {
+        Ad ad = adRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Ad not found"));
+        adRepository.delete(ad);
+    }
+
     private AdDto toDto(Ad ad) {
         AdDto dto = new AdDto();
         dto.setId(ad.getId());

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.example.ads.security.Role;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -26,11 +27,18 @@ public class User {
     @Column
     private String displayName;
 
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50) default 'USER'")
+    private Role role = Role.USER;
+
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Column
+    private Instant updatedAt;
+
     @PreUpdate
     private void preUpdate() {
-        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
     }
 }

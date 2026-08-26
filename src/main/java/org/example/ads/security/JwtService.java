@@ -24,6 +24,7 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(user.getId().toString())
                 .claim("email", user.getEmail())
+                .claim("role", user.getRole().name()) // сохраняем роль в JWT
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationMinutes * 60_000))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
@@ -31,20 +32,25 @@ public class JwtService {
     }
 
     public UUID extractSubject(String token) {
-        JwtParser parser = Jwts.parser()
-                .setSigningKey(secretKey)
-                .build();
-
+        JwtParser parser = Jwts.parser().setSigningKey(secretKey).build();
         Claims claims = parser.parseClaimsJws(token).getBody();
         return UUID.fromString(claims.getSubject());
     }
 
+    // Новый метод: извлечь роль из JWT
+    public Role extractRole(String token) {
+        JwtParser parser = Jwts.parser().setSigningKey(secretKey).build();
+        Claims claims = parser.parseClaimsJws(token).getBody();
+        String roleString = claims.get("role", String.class);
+        if (roleString == null) {
+            return Role.USER; // fallback
+        }
+        return Role.valueOf(roleString);
+    }
+
     public boolean isValid(String token) {
         try {
-            Jwts.parser()
-                    .setSigningKey(secretKey)
-                    .build()
-                    .parseClaimsJws(token);
+            Jwts.parser().setSigningKey(secretKey).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             return false;

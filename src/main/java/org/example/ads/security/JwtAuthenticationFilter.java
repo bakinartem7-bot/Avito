@@ -29,20 +29,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final UUID userId;
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
+        String jwt = authHeader.substring(7);
 
         try {
             if (jwtService.isValid(jwt)) {
-                userId = jwtService.extractSubject(jwt);
-                var authToken = new UsernamePasswordAuthenticationToken(userId, null, null);
+                UUID userId = jwtService.extractSubject(jwt);
+                Role role = jwtService.extractRole(jwt); // добавим этот метод ниже
+
+                AppPrincipal principal = new AppPrincipal(userId, role);
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         } catch (Exception e) {
