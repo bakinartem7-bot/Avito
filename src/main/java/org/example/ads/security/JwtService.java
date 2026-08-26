@@ -37,13 +37,12 @@ public class JwtService {
         return UUID.fromString(claims.getSubject());
     }
 
-    // Новый метод: извлечь роль из JWT
     public Role extractRole(String token) {
         JwtParser parser = Jwts.parser().setSigningKey(secretKey).build();
         Claims claims = parser.parseClaimsJws(token).getBody();
         String roleString = claims.get("role", String.class);
         if (roleString == null) {
-            return Role.USER; // fallback
+            return Role.USER;
         }
         return Role.valueOf(roleString);
     }

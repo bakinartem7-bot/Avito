@@ -32,6 +32,4 @@ public class AdminAdService {
         adRepository.delete(ad);
         log.info("[ADMIN] Ad deleted: id={}", adId);
     }
-
-    // Сюда можно добавить другие админские методы: бан объявления, принудительное обновление и т.п.
 }

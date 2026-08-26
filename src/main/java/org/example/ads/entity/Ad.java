@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Ad {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
@@ -21,23 +23,41 @@ public class Ad {
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false) // TEXT лучше подходит для длинных описаний в PostgreSQL
     private String description;
 
-    @Column(nullable = false)
-    private double price;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
 
-    @Column(nullable = false)
-    private Instant createdAt = Instant.now();
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 
-    @Column
+    @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP")
+    private Instant createdAt;
+
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant updatedAt;
 
+    /**
+     * Слушатель Hibernate: срабатывает перед каждым обновлением сущности.
+     * Гарантирует, что updatedAt всегда актуален.
+     */
     @PreUpdate
-    private void preUpdate() {
+    protected void onPreUpdate() {
         this.updatedAt = Instant.now();
+    }
+
+    /**
+     * Слушатель Hibernate: срабатывает при первом сохранении сущности.
+     * Устанавливает createdAt, если оно не было задано вручную.
+     */
+    @PrePersist
+    protected void onPrePersist() {
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
     }
 }

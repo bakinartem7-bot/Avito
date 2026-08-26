@@ -27,7 +27,6 @@ public class User {
     @Column
     private String displayName;
 
-    // Новые поля для профиля
     @Column
     private String phone;
 

@@ -26,7 +26,7 @@ public class Comment {
     private User author;
 
     @Column(nullable = false)
-    private String content; // именно content, не text
+    private String content;
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();

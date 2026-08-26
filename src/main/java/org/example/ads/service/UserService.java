@@ -22,9 +22,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    // Если здесь будет ошибка "No qualifying bean of type 'PasswordEncoder'",
-    // значит, у тебя нет @Bean в SecurityConfig. См. пояснение ниже.
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -36,7 +33,7 @@ public class UserService {
         return toDto(user);
     }
 
-    @Transactional(readOnly = false) // Явное указание, что тут пишем в БД
+    @Transactional(readOnly = false)
     public UserDto updateProfile(UUID userId, UserProfileUpdateDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
@@ -44,8 +41,6 @@ public class UserService {
         applyIfNotNull(dto.getDisplayName(), user::setDisplayName);
         applyIfNotNull(dto.getPhone(), user::setPhone);
         applyIfNotNull(dto.getCity(), user::setCity);
-
-        // updatedAt обновится автоматически через @PreUpdate в сущности
         User saved = userRepository.save(user);
         log.debug("Profile updated for user: {}", userId);
         return toDto(saved);

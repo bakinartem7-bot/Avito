@@ -31,14 +31,11 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setDisplayName(request.getEmail().split("@")[0]);
-
-        // --- МАГИЯ АДМИНА: если email = admin@test.com → роль ADMIN ---
         if ("admin@test.com".equalsIgnoreCase(request.getEmail())) {
             user.setRole(Role.ADMIN);
         } else {
             user.setRole(Role.USER);
         }
-        // --------------------------------------------------------------
 
         user = userRepository.save(user);
         return new AuthResponse(jwtService.generateToken(user), null);

@@ -50,7 +50,6 @@ class AdServiceIntegrationTest {
         AdCreateDto dto = new AdCreateDto();
         dto.setTitle("Велосипед");
         dto.setDescription("В отличном состоянии");
-        // ИСПРАВЛЕНО: передаём BigDecimal, а не double
         dto.setPrice(new BigDecimal("15000.00"));
 
         AdDto result = adService.createAd(testUserId, dto);

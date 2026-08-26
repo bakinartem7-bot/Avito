@@ -17,7 +17,7 @@ public class CommentDto {
     private UUID userId;
 
     @Schema(description = "Текст комментария", example = "Отличное объявление, спасибо!")
-    private String content; // тоже content
+    private String content;
 
     @Schema(description = "Дата создания", example = "2026-08-22T12:34:56Z")
     private Instant createdAt;

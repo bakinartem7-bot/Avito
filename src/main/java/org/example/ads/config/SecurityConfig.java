@@ -24,15 +24,13 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Публичные эндпоинты
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/ads", "/api/ads/*").permitAll()
 
-                        // Админские маршруты: только ROLE_ADMIN
                         .requestMatchers(HttpMethod.DELETE, "/api/admin/ads/*").hasRole("ADMIN")
 
-                        // Всё остальное: только авторизованные пользователи
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
