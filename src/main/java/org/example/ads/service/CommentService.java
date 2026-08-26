@@ -1,5 +1,6 @@
 package org.example.ads.service;
 
+import org.example.ads.dto.CommentDto;
 import org.example.ads.entity.Ad;
 import org.example.ads.entity.Comment;
 import org.example.ads.entity.User;
@@ -13,12 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Сервис комментариев. Реализует бизнес-логику для работы с комментариями:
- * получение списка, создание, удаление с обязательной проверкой прав доступа.
- */
 @Service
-@Transactional(readOnly = false)
+@Transactional
 public class CommentService {
 
     private final CommentRepository commentRepository;
@@ -35,31 +32,16 @@ public class CommentService {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Возвращает список всех комментариев к объявлению.
-     *
-     * @param adId ID объявления
-     * @return список сущностей Comment
-     * @throws NotFoundException если объявление не найдено (для согласованности поведения API)
-     */
     @Transactional(readOnly = true)
-    public List<Comment> getCommentsForAd(UUID adId) {
-        // Проверка существования объявления — чтобы API возвращал 404, если объявления нет
+    public List<CommentDto> getCommentsForAd(UUID adId) {
         adRepository.findById(adId)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
-        return commentRepository.findByAdId(adId);
+        return commentRepository.findByAdId(adId).stream()
+                .map(this::toDto)
+                .toList();
     }
 
-    /**
-     * Создаёт новый комментарий к объявлению от имени пользователя.
-     *
-     * @param adId      ID объявления
-     * @param authorId  ID автора комментария (пользователя)
-     * @param text      Текст комментария
-     * @return сохранённая сущность Comment
-     * @throws NotFoundException если не найдено объявление или пользователь
-     */
-    public Comment createComment(UUID adId, UUID authorId, String text) {
+    public CommentDto createComment(UUID adId, UUID authorId, String content) {
         Ad ad = adRepository.findById(adId)
                 .orElseThrow(() -> new NotFoundException("Ad not found"));
 
@@ -69,20 +51,24 @@ public class CommentService {
         Comment comment = new Comment();
         comment.setAd(ad);
         comment.setAuthor(author);
-        comment.setContent(text);
-        // createdAt и updatedAt заполняются автоматически через @PrePersist / @PreUpdate
+        comment.setContent(content);
 
-        return commentRepository.save(comment);
+        return toDto(commentRepository.save(comment));
     }
 
-    /**
-     * Удаляет комментарий, если текущий пользователь является его автором.
-     *
-     * @param id            ID комментария
-     * @param currentUserId ID текущего пользователя (из JWT)
-     * @throws AccessDeniedException если пользователь пытается удалить чужой комментарий
-     * @throws NotFoundException    если комментарий не найден
-     */
+    public CommentDto updateComment(UUID id, UUID currentUserId, String content) {
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Comment not found"));
+
+        if (!comment.getAuthor().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("You can only update your own comments");
+        }
+
+        comment.setContent(content);
+
+        return toDto(commentRepository.save(comment));
+    }
+
     public void deleteComment(UUID id, UUID currentUserId) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Comment not found"));
@@ -90,7 +76,17 @@ public class CommentService {
         if (!comment.getAuthor().getId().equals(currentUserId)) {
             throw new AccessDeniedException("You can only delete your own comments");
         }
-
         commentRepository.delete(comment);
+    }
+
+    private CommentDto toDto(Comment c) {
+        CommentDto dto = new CommentDto();
+        dto.setId(c.getId());
+        dto.setAdId(c.getAd().getId());
+        dto.setUserId(c.getAuthor().getId());
+        dto.setContent(c.getContent());
+        dto.setCreatedAt(c.getCreatedAt());
+        dto.setUpdatedAt(c.getUpdatedAt());
+        return dto;
     }
 }

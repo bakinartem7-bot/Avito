@@ -10,7 +10,7 @@ public class AdDto {
     private UUID authorId;
     private String title;
     private String description;
-    private double price;
+    private Double price;
     private Instant createdAt;
     private Instant updatedAt;
 }

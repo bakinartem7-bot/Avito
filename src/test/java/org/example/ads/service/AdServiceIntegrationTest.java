@@ -1,6 +1,7 @@
 package org.example.ads.service;
 
 import org.example.ads.dto.AdCreateDto;
+import org.example.ads.dto.AdDto;
 import org.example.ads.entity.User;
 import org.example.ads.repository.UserRepository;
 import org.example.ads.exception.AccessDeniedException;
@@ -11,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,12 +36,12 @@ class AdServiceIntegrationTest {
     void setUp() {
         var user = new User();
         user.setEmail("test-author@example.com");
-        user.setPasswordHash("hashed-pass");
+        user.setPassword("hashed-pass");
         testUserId = userRepository.save(user).getId();
 
         var otherUser = new User();
         otherUser.setEmail("other-author@example.com");
-        otherUser.setPasswordHash("hashed-pass-2");
+        otherUser.setPassword("hashed-pass-2");
         otherUserId = userRepository.save(otherUser).getId();
     }
 
@@ -46,12 +50,15 @@ class AdServiceIntegrationTest {
         AdCreateDto dto = new AdCreateDto();
         dto.setTitle("Велосипед");
         dto.setDescription("В отличном состоянии");
-        dto.setPrice(15000.0);
+        // ИСПРАВЛЕНО: передаём BigDecimal, а не double
+        dto.setPrice(new BigDecimal("15000.00"));
 
-        var result = adService.createAd(testUserId, dto);
+        AdDto result = adService.createAd(testUserId, dto);
 
         assertNotNull(result);
         assertEquals("Велосипед", result.getTitle());
+        assertEquals(new BigDecimal("15000.00"), result.getPrice());
+
         assertEquals(testUserId, result.getAuthorId());
         assertNotNull(result.getCreatedAt());
     }
@@ -60,15 +67,17 @@ class AdServiceIntegrationTest {
     void getAllAds_returns_list() {
         AdCreateDto dto1 = new AdCreateDto();
         dto1.setTitle("Товар 1");
-        dto1.setPrice(100.0);
+        dto1.setDescription("Desc 1");
+        dto1.setPrice(new BigDecimal("100.00"));
         adService.createAd(testUserId, dto1);
 
         AdCreateDto dto2 = new AdCreateDto();
         dto2.setTitle("Товар 2");
-        dto2.setPrice(200.0);
+        dto2.setDescription("Desc 2");
+        dto2.setPrice(new BigDecimal("200.50"));
         adService.createAd(otherUserId, dto2);
 
-        var list = adService.getAllAds();
+        List<AdDto> list = adService.getAllAds();
 
         assertEquals(2, list.size());
         assertTrue(list.stream().anyMatch(a -> "Товар 1".equals(a.getTitle())));
@@ -79,47 +88,51 @@ class AdServiceIntegrationTest {
     void getAdById_success() {
         AdCreateDto dto = new AdCreateDto();
         dto.setTitle("Смартфон");
-        dto.setPrice(30000.0);
-        var created = adService.createAd(testUserId, dto);
+        dto.setDescription("Новый");
+        dto.setPrice(new BigDecimal("30000.99"));
 
-        var found = adService.getAdById(created.getId());
+        AdDto created = adService.createAd(testUserId, dto);
+
+        Optional<AdDto> foundOptional = adService.findAdById(created.getId());
+        assertTrue(foundOptional.isPresent());
+        AdDto found = foundOptional.get();
 
         assertEquals(created.getId(), found.getId());
         assertEquals("Смартфон", found.getTitle());
+        assertEquals(testUserId, found.getAuthorId());
     }
 
     @Test
-    void getAdById_notFound_throws() {
+    void getAdById_notFound_returns_empty_optional() {
         UUID nonExistentId = UUID.randomUUID();
-
-        assertThrows(NotFoundException.class, () -> {
-            adService.getAdById(nonExistentId);
-        });
+        Optional<AdDto> result = adService.findAdById(nonExistentId);
+        assertFalse(result.isPresent());
     }
 
     @Test
     void deleteAd_own_success() {
         AdCreateDto dto = new AdCreateDto();
         dto.setTitle("Удаляемое объявление");
-        dto.setPrice(50.0);
-        var ad = adService.createAd(testUserId, dto);
+        dto.setDescription("Тест");
+        dto.setPrice(new BigDecimal("50.00"));
+        AdDto ad = adService.createAd(testUserId, dto);
 
         adService.deleteAd(ad.getId(), testUserId);
 
-        assertThrows(NotFoundException.class, () -> {
-            adService.getAdById(ad.getId());
-        });
+        Optional<AdDto> remaining = adService.findAdById(ad.getId());
+        assertFalse(remaining.isPresent());
     }
 
     @Test
     void deleteAd_other_user_throws() {
         AdCreateDto dto = new AdCreateDto();
         dto.setTitle("Чужое объявление");
-        dto.setPrice(70.0);
-        var ad = adService.createAd(otherUserId, dto);
+        dto.setDescription("Тест");
+        dto.setPrice(new BigDecimal("70.00"));
+        AdDto ad = adService.createAd(otherUserId, dto);
 
         assertThrows(AccessDeniedException.class, () -> {
-            adService.deleteAd(ad.getId(), testUserId); // пытаемся удалить чужое
+            adService.deleteAd(ad.getId(), testUserId);
         });
     }
 }

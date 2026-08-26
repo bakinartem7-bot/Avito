@@ -6,5 +6,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AdRepository extends JpaRepository<Ad, UUID> {
-    List<Ad> findByAuthorId(UUID authorId);
+    List<Ad> findAllByAuthorId(UUID authorId);
 }

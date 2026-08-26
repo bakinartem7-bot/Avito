@@ -10,25 +10,26 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
+
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     public UserDto getUserById(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
         return toDto(user);
     }
 
-    private UserDto toDto(User user) {
+    private UserDto toDto(User u) {
         UserDto dto = new UserDto();
-        dto.setId(user.getId());
-        dto.setEmail(user.getEmail());
-        dto.setCreatedAt(user.getCreatedAt());
+        dto.setId(u.getId());
+        dto.setEmail(u.getEmail());
+        dto.setCreatedAt(u.getCreatedAt());
         return dto;
     }
 }

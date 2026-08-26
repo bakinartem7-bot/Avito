@@ -4,14 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.example.ads.entity.User;
-
 import java.time.Instant;
 import java.util.UUID;
-
-/**
- * Сущность объявления. Соответствует таблице ads в БД.
- */
 
 @Entity
 @Table(name = "ads")
@@ -20,31 +14,30 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Ad {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
+    @Column(nullable = false)
     private String title;
+
+    @Column(nullable = false)
     private String description;
+
+    @Column(nullable = false)
     private double price;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(nullable = false)
+    private Instant createdAt = Instant.now();
 
-    @Column(name = "updated_at")
+    @Column
     private Instant updatedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
     @PreUpdate
-    protected void onUpdate() {
+    private void preUpdate() {
         this.updatedAt = Instant.now();
     }
 }

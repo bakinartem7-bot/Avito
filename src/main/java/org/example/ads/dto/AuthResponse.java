@@ -1,13 +1,13 @@
 package org.example.ads.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuthResponse {
-    @Schema(description = "Токен доступа (JWT)", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6...")
-    private String accessToken;
-
-    @Schema(description = "Токен обновления (опционально)", example = "refresh-token-example")
+    private String token;
     private String refreshToken;
 }

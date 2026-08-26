@@ -1,5 +1,6 @@
 package org.example.ads.service;
 
+import org.example.ads.dto.CommentDto;
 import org.example.ads.entity.Ad;
 import org.example.ads.entity.User;
 import org.example.ads.repository.AdRepository;
@@ -36,38 +37,41 @@ class CommentServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
+
         var author = new User();
         author.setEmail("author@example.com");
-        author.setPasswordHash("pass");
+        author.setPassword("pass_hash_test");
         authorId = userRepository.save(author).getId();
 
         var other = new User();
         other.setEmail("other@example.com");
-        other.setPasswordHash("pass2");
+        other.setPassword("pass_hash_other");
         otherUserId = userRepository.save(other).getId();
 
         var ad = new Ad();
         ad.setAuthor(userRepository.findById(authorId).orElseThrow());
         ad.setTitle("Тестовый товар");
+        ad.setDescription("Описание товара");
         ad.setPrice(100.0);
         adId = adRepository.save(ad).getId();
     }
 
     @Test
     void getCommentsForAd_empty_list_when_none() {
-        List<?> comments = commentService.getCommentsForAd(adId);
+        List<CommentDto> comments = commentService.getCommentsForAd(adId);
         assertTrue(comments.isEmpty());
     }
 
     @Test
     void createComment_success() {
-        String text = "Отличный товар!";
-        var comment = commentService.createComment(adId, authorId, text);
+        String contentText = "Отличный товар!";
+        var comment = commentService.createComment(adId, authorId, contentText);
 
         assertNotNull(comment);
-        assertEquals(text, comment.getText());
-        assertEquals(adId, comment.getAd().getId());
-        assertEquals(authorId, comment.getAuthor().getId());
+        assertEquals(contentText, comment.getContent());
+
+        assertEquals(adId, comment.getAdId());
+        assertEquals(authorId, comment.getUserId());
     }
 
     @Test
@@ -75,10 +79,10 @@ class CommentServiceIntegrationTest {
         String text = "Комментарий 1";
         commentService.createComment(adId, authorId, text);
 
-        var comments = commentService.getCommentsForAd(adId);
+        List<CommentDto> comments = commentService.getCommentsForAd(adId);
 
         assertEquals(1, comments.size());
-        assertEquals(text, comments.get(0).getText());
+        assertEquals(text, comments.get(0).getContent());
     }
 
     @Test
@@ -89,7 +93,7 @@ class CommentServiceIntegrationTest {
 
         commentService.deleteComment(commentId, authorId);
 
-        var remaining = commentService.getCommentsForAd(adId);
+        List<CommentDto> remaining = commentService.getCommentsForAd(adId);
         assertTrue(remaining.isEmpty());
     }
 
