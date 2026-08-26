@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/002_create_ads.yml
   - include:
       file: db/changelog/003_create_comments.yml
+  - include:
+      file: db/changelog/add_user_profile_fields.yaml

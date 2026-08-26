@@ -27,6 +27,13 @@ public class User {
     @Column
     private String displayName;
 
+    // Новые поля для профиля
+    @Column
+    private String phone;
+
+    @Column
+    private String city;
+
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(50) default 'USER'")
     private Role role = Role.USER;

@@ -6,5 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface AdRepository extends JpaRepository<Ad, UUID> {
-    List<Ad> findAllByAuthorId(UUID authorId);
+
+    // Этот метод Spring Data сгенерирует автоматически по имени
+    List<Ad> findAllByAuthorIdOrderByCreatedAtDesc(UUID authorId);
 }

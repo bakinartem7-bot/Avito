@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-phone-city-to-users
+      author: student
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: phone
+                  type: varchar(20)
+              - column:
+                  name: city
+                  type: varchar(100)
