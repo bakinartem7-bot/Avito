@@ -1,30 +1,34 @@
 package org.example.ads.dto;
 
-import lombok.Data;
 import org.example.ads.entity.User;
-import org.example.ads.security.Role;
 import java.time.Instant;
 import java.util.UUID;
 
-@Data
 public class UserDto {
-    private UUID id;
-    private String email;
-    private String displayName;
-    private String phone;
-    private String city;
-    private Instant createdAt;
-    private Role role;
-    private Instant updatedAt;
+    private final UUID id;
+    private final String username;
+    private final String email;
+    private final String role;
+    private final Instant registeredAt;
+    private final String city;
+    private final String phone;
 
-    public static UserDto fromEntity(User u) {
-        UserDto dto = new UserDto();
-        dto.setId(u.getId());
-        dto.setEmail(u.getEmail());
-        dto.setDisplayName(u.getDisplayName());
-        dto.setPhone(u.getPhone());
-        dto.setCity(u.getCity());
-        dto.setCreatedAt(u.getCreatedAt());
-        return dto;
+    public UserDto(User u) {
+        this.id = u.getId();
+        this.username = u.getUsername();
+        this.email = u.getEmail();
+        this.role = u.getRole() != null ? u.getRole().name() : null;
+
+        this.registeredAt = u.getRegisteredAt();
+
+        this.city = u.getCity();
+        this.phone = u.getPhone();
     }
+    public UUID getId() { return id; }
+    public String getUsername() { return username; }
+    public String getEmail() { return email; }
+    public String getRole() { return role; }
+    public Instant getRegisteredAt() { return registeredAt; }
+    public String getCity() { return city; }
+    public String getPhone() { return phone; }
 }

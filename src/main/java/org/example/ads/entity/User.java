@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.example.ads.security.Role;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -14,37 +16,53 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true, nullable = false, length = 50)
+    private String username;
+
+    @Column(nullable = false)
+    private String passwordHash;
+
+    @Column(unique = true, nullable = false, length = 255)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
-
-    @Column
-    private String displayName;
-
-    @Column
-    private String phone;
-
-    @Column
-    private String city;
-
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(50) default 'USER'")
-    private Role role = Role.USER;
+    @Column(name = "role", length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'USER'")
+    private Role role;
 
-    @Column(nullable = false)
-    private Instant createdAt = Instant.now();
+    @Column(name = "registered_at", updatable = false)
+    private Instant registeredAt;
 
-    @Column
+    @UpdateTimestamp
     private Instant updatedAt;
 
-    @PreUpdate
-    private void preUpdate() {
-        this.updatedAt = Instant.now();
+    @Column(length = 100)
+    private String city;
+
+    @Column(length = 20)
+    private String phone;
+
+    @OneToMany(mappedBy = "author", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Ad> ads = new ArrayList<>();
+
+    @OneToMany(mappedBy = "author", fetch = FetchType.LAZY)
+    private List<Comment> comments = new ArrayList<>();
+
+    @PrePersist
+    protected void onPrePersist() {
+        if (this.registeredAt == null) {
+            this.registeredAt = Instant.now();
+        }
+        if (this.role == null) {
+            this.role = Role.USER;
+        }
+    }
+
+    public void setDisplayName(String displayName) {
+        this.username = displayName;
     }
 }

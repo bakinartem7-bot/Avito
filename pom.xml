@@ -22,6 +22,8 @@
         <lombok.version>1.18.34</lombok.version>
         <testcontainers.version>1.19.8</testcontainers.version>
         <jjwt.version>0.12.3</jjwt.version>
+        <springdoc.version>2.3.0</springdoc.version>
+        <hibernate.version>6.6.1.Final</hibernate.version>
     </properties>
 
     <dependencies>
@@ -49,6 +51,12 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Liquibase -->
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -62,32 +70,12 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 Database (для тестов и локальной разработки) -->
+        <!-- H2 Database (только для тестов и локальной разработки) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-
-        <!-- JWT -->
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-            <version>${jjwt.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-            <version>${jjwt.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-            <version>${jjwt.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -96,11 +84,18 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Swagger UI -->
+        <!-- Swagger UI / OpenAPI -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- Commons IO (для работы с файлами в AdImageService) -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
         </dependency>
 
         <!-- Тестирование -->
@@ -110,7 +105,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Testcontainers -->
+        <!-- Testcontainers (для интеграционных тестов с реальной БД) -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
@@ -126,8 +121,26 @@
     </dependencies>
 
     <build>
+        <!-- ВАЖНО: отключаем фильтрацию для application.properties, чтобы убрать MalformedInputException -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>application.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <excludes>
+                    <exclude>application.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+
         <plugins>
-            <!-- Плагин компилятора с поддержкой аннотаций Lombok (обязательно!) -->
+            <!-- Плагин компилятора с поддержкой Lombok annotation processor -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -145,7 +158,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot plugin -->
+            <!-- Spring Boot plugin (для сборки и запуска) -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

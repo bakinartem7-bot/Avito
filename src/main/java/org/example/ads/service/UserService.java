@@ -1,89 +1,72 @@
 package org.example.ads.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.example.ads.dto.ChangePasswordDto;
-import org.example.ads.dto.UserDto;
-import org.example.ads.dto.UserProfileUpdateDto;
 import org.example.ads.entity.User;
-import org.example.ads.exception.AccessDeniedException;
-import org.example.ads.exception.NotFoundException;
+import org.example.ads.entity.Role;
 import org.example.ads.repository.UserRepository;
+import org.example.ads.dto.ChangePasswordDto;
+import org.example.ads.dto.UserProfileUpdateDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
+import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 @Service
 @Transactional
-@Slf4j // Нужен для log.info/log.error
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserDto getUserById(UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
-        return toDto(user);
-    }
-
-    @Transactional(readOnly = false)
-    public UserDto updateProfile(UUID userId, UserProfileUpdateDto dto) {
+    @Transactional
+    public void changePassword(UUID userId, ChangePasswordDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        applyIfNotNull(dto.getDisplayName(), user::setDisplayName);
-        applyIfNotNull(dto.getPhone(), user::setPhone);
-        applyIfNotNull(dto.getCity(), user::setCity);
-        User saved = userRepository.save(user);
-        log.debug("Profile updated for user: {}", userId);
-        return toDto(saved);
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPasswordHash())) {
+            throw new IllegalArgumentException("Invalid current password");
+        }
+
+        String newEncoded = passwordEncoder.encode(dto.getNewPassword());
+        user.setPasswordHash(newEncoded);
+
     }
 
     @Transactional
-    public void changePassword(UUID userId, ChangePasswordDto dto) {
-        if (dto.getCurrentPassword() == null || dto.getCurrentPassword().isBlank()) {
-            throw new AccessDeniedException("Current password cannot be empty");
-        }
-        if (dto.getNewPassword() == null || dto.getNewPassword().isBlank()) {
-            throw new AccessDeniedException("New password cannot be empty");
-        }
-
+    public User updateProfile(UUID userId, UserProfileUpdateDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
-            log.warn("Password change failed: incorrect current password for user {}", userId);
-            throw new AccessDeniedException("Current password is incorrect");
+        if (dto.getDisplayName() != null) {
+            user.setUsername(dto.getDisplayName()); // setDisplayName меняет username
+        }
+        if (dto.getCity() != null) {
+            user.setCity(dto.getCity());
+        }
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
         }
 
-        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
-        userRepository.save(user);
-        log.info("Password successfully changed for user: {}", userId);
+        return user;
     }
 
-    private UserDto toDto(User u) {
-        UserDto dto = new UserDto();
-        dto.setId(u.getId());
-        dto.setEmail(u.getEmail());
-        dto.setDisplayName(u.getDisplayName());
-        dto.setPhone(u.getPhone());
-        dto.setCity(u.getCity());
-        dto.setRole(u.getRole());
-        dto.setCreatedAt(u.getCreatedAt());
-        dto.setUpdatedAt(u.getUpdatedAt());
-        return dto;
+    public User registerUser(String username, String email, String rawPassword, Role role) {
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setRole(role);
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        return userRepository.save(user);
     }
 
-    private static <T> void applyIfNotNull(T value, Consumer<T> setter) {
-        if (value != null) {
-            setter.accept(value);
-        }
+    public Optional<User> getUserById(UUID id) {
+        return userRepository.findById(id);
     }
 }
