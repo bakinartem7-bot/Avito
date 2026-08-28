@@ -6,6 +6,7 @@ import org.example.ads.entity.User;
 import org.example.ads.repository.UserRepository;
 import org.example.ads.exception.AccessDeniedException;
 import org.example.ads.exception.NotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +35,24 @@ class AdServiceIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Создаём пользователей и сохраняем их ID
         var user = new User();
-        user.setEmail("test-author@example.com");
+        user.setEmail("test-author-" + UUID.randomUUID() + "@example.com");
         user.setPassword("hashed-pass");
         testUserId = userRepository.save(user).getId();
 
         var otherUser = new User();
-        otherUser.setEmail("other-author@example.com");
+        otherUser.setEmail("other-author-" + UUID.randomUUID() + "@example.com");
         otherUser.setPassword("hashed-pass-2");
         otherUserId = userRepository.save(otherUser).getId();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Явно удаляем пользователей, чтобы не зависеть только на DirtiesContext
+        // Это делает тесты более предсказуемыми и помогает избежать проблем с FK
+        userRepository.deleteById(testUserId);
+        userRepository.deleteById(otherUserId);
     }
 
     @Test
@@ -57,30 +67,33 @@ class AdServiceIntegrationTest {
         assertNotNull(result);
         assertEquals("Велосипед", result.getTitle());
         assertEquals(new BigDecimal("15000.00"), result.getPrice());
-
         assertEquals(testUserId, result.getAuthorId());
         assertNotNull(result.getCreatedAt());
     }
 
     @Test
     void getAllAds_returns_list() {
+        // Создаём объявления
         AdCreateDto dto1 = new AdCreateDto();
         dto1.setTitle("Товар 1");
         dto1.setDescription("Desc 1");
         dto1.setPrice(new BigDecimal("100.00"));
-        adService.createAd(testUserId, dto1);
+        AdDto ad1 = adService.createAd(testUserId, dto1);
 
         AdCreateDto dto2 = new AdCreateDto();
         dto2.setTitle("Товар 2");
         dto2.setDescription("Desc 2");
         dto2.setPrice(new BigDecimal("200.50"));
-        adService.createAd(otherUserId, dto2);
+        AdDto ad2 = adService.createAd(otherUserId, dto2);
 
         List<AdDto> list = adService.getAllAds();
 
         assertEquals(2, list.size());
         assertTrue(list.stream().anyMatch(a -> "Товар 1".equals(a.getTitle())));
         assertTrue(list.stream().anyMatch(a -> "Товар 2".equals(a.getTitle())));
+        // Дополнительно проверяем, что в списке есть оба автора
+        assertTrue(list.stream().anyMatch(a -> testUserId.equals(a.getAuthorId())));
+        assertTrue(list.stream().anyMatch(a -> otherUserId.equals(a.getAuthorId())));
     }
 
     @Test

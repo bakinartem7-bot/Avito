@@ -24,6 +24,8 @@
         <jjwt.version>0.12.3</jjwt.version>
         <springdoc.version>2.3.0</springdoc.version>
         <hibernate.version>6.6.1.Final</hibernate.version>
+        <!-- JaCoCo для отчётов по покрытию (важно для диплома) -->
+        <jacoco.version>0.8.13</jacoco.version>
     </properties>
 
     <dependencies>
@@ -76,6 +78,7 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -121,7 +124,6 @@
     </dependencies>
 
     <build>
-        <!-- ВАЖНО: отключаем фильтрацию для application.properties, чтобы убрать MalformedInputException -->
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -170,6 +172,29 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <!-- JaCoCo: сбор покрытия и генерация HTML-отчёта -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <!-- Подготовка агента для сбора данных о покрытии -->
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <!-- Генерация отчёта после тестов -->
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

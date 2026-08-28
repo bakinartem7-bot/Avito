@@ -7,6 +7,7 @@ import org.example.ads.repository.AdRepository;
 import org.example.ads.repository.UserRepository;
 import org.example.ads.exception.AccessDeniedException;
 import org.example.ads.exception.NotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Интеграционные тесты сервиса комментариев.
- * Проверяют корректность CRUD-операций, авторизацию (запрет на удаление чужих комментариев),
- * обработку ошибок при отсутствии сущностей (Ad, User).
- * Использует полную загрузку контекста Spring Boot и изолированную БД для каждого теста.
+ * Проверяют CRUD, авторизацию, обработку ошибок.
+ * Используют полную загрузку контекста Spring Boot и явную очистку данных.
  */
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -43,21 +43,20 @@ class CommentServiceIntegrationTest {
     private UUID otherUserId;
 
     /**
-     * Подготовка тестовых данных перед каждым тестом:
-     * - Создаются два пользователя (автор и «чужой» пользователь).
-     * - Создаётся одно тестовое объявление от имени автора.
+     * Подготовка тестовых данных перед каждым тестом.
+     * Используем UUID в email, чтобы избежать дублирования при параллельных запусках.
      */
     @BeforeEach
     void setUp() {
         // Создаём автора объявления
         var author = new User();
-        author.setEmail("author@example.com");
+        author.setEmail("author-" + UUID.randomUUID() + "@example.com");
         author.setPassword("pass_hash_test");
         authorId = userRepository.save(author).getId();
 
         // Создаём другого пользователя (для проверки прав доступа)
         var other = new User();
-        other.setEmail("other@example.com");
+        other.setEmail("other-" + UUID.randomUUID() + "@example.com");
         other.setPassword("pass_hash_other");
         otherUserId = userRepository.save(other).getId();
 
@@ -66,9 +65,29 @@ class CommentServiceIntegrationTest {
         ad.setAuthor(userRepository.findById(authorId).orElseThrow());
         ad.setTitle("Тестовый товар");
         ad.setDescription("Описание товара");
-        // ИСПРАВЛЕНО: передаём BigDecimal вместо double
         ad.setPrice(BigDecimal.valueOf(100));
         adId = adRepository.save(ad).getId();
+    }
+
+    /**
+     * Явная очистка данных после каждого теста.
+     * Это делает тесты полностью изолированными и предотвращает ошибки FK.
+     */
+    @AfterEach
+    void tearDown() {
+        // Удаляем комментарии (если они есть) — порядок важен из-за FK
+        // Если в Comment есть свой репозиторий, лучше использовать его.
+        // Здесь полагаемся на каскадное удаление либо удаляем вручную, если возможно.
+        // Для простоты и надёжности — удаляем объявление (удалит комментарии при cascade=REMOVE)
+        if (adRepository.existsById(adId)) {
+            adRepository.deleteById(adId);
+        }
+        if (userRepository.existsById(authorId)) {
+            userRepository.deleteById(authorId);
+        }
+        if (userRepository.existsById(otherUserId)) {
+            userRepository.deleteById(otherUserId);
+        }
     }
 
     @Test
@@ -91,12 +110,14 @@ class CommentServiceIntegrationTest {
     @Test
     void getCommentsForAd_returns_created_comment() {
         String text = "Комментарий 1";
-        commentService.createComment(adId, authorId, text);
+        var comment = commentService.createComment(adId, authorId, text);
+        UUID commentId = comment.getId();
 
         List<CommentDto> comments = commentService.getCommentsForAd(adId);
 
         assertEquals(1, comments.size(), "Должен быть ровно один комментарий");
         assertEquals(text, comments.get(0).getContent(), "Текст комментария должен совпадать");
+        assertEquals(commentId, comments.get(0).getId(), "ID комментария должен совпадать");
     }
 
     @Test
