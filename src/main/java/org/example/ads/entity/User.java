@@ -68,5 +68,6 @@ public class User {
         this.username = displayName;
     }
     public void setPassword(String s) {
+        this.passwordHash=s;
     }
 }

@@ -32,20 +32,11 @@ public class Ad {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
-    /**
-     * Связь с автором.
-     * Оставляем для JPA-запросов и удобной навигации (например, ad.getAuthor().getEmail()).
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "author_id", nullable = false, insertable = false, updatable = false)
-    // insertable/updatable=false — чтобы Hibernate не пытался писать сюда, а использовал authorId
+    @JoinColumn(name = "author_id", nullable = false)
     private User author;
 
-    /**
-     * Явное поле authorId для удобного сохранения без загрузки User.
-     * Мапится на тот же столбец author_id в БД.
-     */
-    @Column(name = "author_id", nullable = false)
+    @Column(name = "author_id", insertable = false, updatable = false, nullable = false)
     private UUID authorId;
 
     @Column(name = "published_at", updatable = false)

@@ -52,22 +52,25 @@ class CommentServiceIntegrationTest {
         var author = new User();
         author.setEmail("author-" + UUID.randomUUID() + "@example.com");
         author.setPassword("pass_hash_test");
-        authorId = userRepository.save(author).getId();
+        author = userRepository.save(author);
+        authorId = author.getId();
 
-        // Создаём другого пользователя (для проверки прав доступа)
+        // Создаём другого пользователя
         var other = new User();
         other.setEmail("other-" + UUID.randomUUID() + "@example.com");
         other.setPassword("pass_hash_other");
-        otherUserId = userRepository.save(other).getId();
+        other = userRepository.save(other);
+        otherUserId = other.getId();
 
         // Создаём тестовое объявление
         var ad = new Ad();
-        ad.setAuthor(userRepository.findById(authorId).orElseThrow());
+        ad.setAuthor(author); // <-- передаём объект с ID
         ad.setTitle("Тестовый товар");
         ad.setDescription("Описание товара");
         ad.setPrice(BigDecimal.valueOf(100));
         adId = adRepository.save(ad).getId();
     }
+
 
     /**
      * Явная очистка данных после каждого теста.

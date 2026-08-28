@@ -2,7 +2,7 @@ package org.example.ads.mapper;
 
 import org.example.ads.dto.AdDto;
 import org.example.ads.entity.Ad;
-import java.time.Instant;
+
 import java.math.BigDecimal;
 
 public class AdMapper {
@@ -14,7 +14,11 @@ public class AdMapper {
 
         AdDto dto = new AdDto();
         dto.setId(ad.getId());
-        dto.setAuthorId(ad.getAuthorId());
+
+        // ИСПРАВЛЕНИЕ: берём ID из связи author, а не из authorId.
+        // authorId заполняется только при чтении из БД, а сразу после save() он null.
+        dto.setAuthorId(ad.getAuthor() != null ? ad.getAuthor().getId() : null);
+
         dto.setTitle(ad.getTitle());
         dto.setDescription(ad.getDescription());
         dto.setPrice(ad.getPrice() != null ? ad.getPrice() : BigDecimal.ZERO);
