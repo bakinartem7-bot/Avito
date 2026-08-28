@@ -27,46 +27,41 @@ public class UserService {
 
     @Transactional
     public void changePassword(UUID userId, ChangePasswordDto dto) {
+        Assert.notNull(userId, "userId must not be null");
+        Assert.notNull(dto, "dto must not be null");
+        Assert.hasText(dto.getCurrentPassword(), "currentPassword must not be empty");
+        Assert.hasText(dto.getNewPassword(), "newPassword must not be empty");
+
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
         if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid current password");
+            throw new IllegalArgumentException("Current password is incorrect");
         }
 
-        String newEncoded = passwordEncoder.encode(dto.getNewPassword());
-        user.setPasswordHash(newEncoded);
-
-    }
-
-    @Transactional
-    public User updateProfile(UUID userId, UserProfileUpdateDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        if (dto.getDisplayName() != null) {
-            user.setUsername(dto.getDisplayName()); // setDisplayName меняет username
-        }
-        if (dto.getCity() != null) {
-            user.setCity(dto.getCity());
-        }
-        if (dto.getPhone() != null) {
-            user.setPhone(dto.getPhone());
-        }
-
-        return user;
-    }
-
-    public User registerUser(String username, String email, String rawPassword, Role role) {
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
-        user.setRole(role);
-        user.setPasswordHash(passwordEncoder.encode(rawPassword));
-        return userRepository.save(user);
+        String encodedNewPassword = passwordEncoder.encode(dto.getNewPassword());
+        user.setPasswordHash(encodedNewPassword);
+        // userRepository.save(user); // @Transactional сохранит автоматически
     }
 
     public Optional<User> getUserById(UUID id) {
         return userRepository.findById(id);
+    }
+
+    public User updateProfile(UUID id, UserProfileUpdateDto dto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
+
+        if (dto.getDisplayName() != null) {
+            user.setDisplayName(dto.getDisplayName());
+        }
+        if (dto.getPhone() != null) {
+            user.setPhone(dto.getPhone());
+        }
+        if (dto.getCity() != null) {
+            user.setCity(dto.getCity());
+        }
+
+        return user; // save произойдёт автоматически благодаря @Transactional
     }
 }

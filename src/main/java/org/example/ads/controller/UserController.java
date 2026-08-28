@@ -3,7 +3,7 @@ package org.example.ads.controller;
 import org.example.ads.dto.ChangePasswordDto;
 import org.example.ads.dto.UserDto;
 import org.example.ads.dto.UserProfileUpdateDto;
-import org.example.ads.service.UserService;
+import org.example.ads.service.AdService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,9 +13,9 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final UserService userService;
+    private final AdService.UserService userService;
 
-    public UserController(UserService userService) {
+    public UserController(AdService.UserService userService) {
         this.userService = userService;
     }
 

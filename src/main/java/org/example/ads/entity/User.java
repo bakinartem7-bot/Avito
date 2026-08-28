@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.Instant;
 import java.util.UUID;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class User {
     @Column(unique = true, nullable = false, length = 255)
     private String email;
 
+    // role остаётся enum, Hibernate сам сохранит его как строку (VARCHAR)
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'USER'")
     private Role role;
@@ -57,6 +59,7 @@ public class User {
         if (this.registeredAt == null) {
             this.registeredAt = Instant.now();
         }
+        // Если роль не задана — ставим USER (из enum)
         if (this.role == null) {
             this.role = Role.USER;
         }
@@ -64,5 +67,9 @@ public class User {
 
     public void setDisplayName(String displayName) {
         this.username = displayName;
+    }
+
+    // Этот метод можно удалить или оставить пустым — он не нужен
+    public void setPassword(String s) {
     }
 }

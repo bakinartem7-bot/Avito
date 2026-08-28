@@ -13,42 +13,37 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Конфигурация безопасности Spring Security БЕЗ JWT.
- * Использует стандартную аутентификацию Spring Security (Basic/Form).
- * Подходит для MVP и дипломной работы, если JWT не является обязательным требованием.
- */
 @Configuration
 public class SecurityConfig {
 
-    /**
-     * Основной бин цепочки безопасности (SecurityFilterChain).
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
+                        // Открытые эндпоинты
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-resources/**").permitAll()
+
+                        // Публичный GET объявлений
                         .requestMatchers(HttpMethod.GET, "/api/ads/**").permitAll()
+
+                        // Админские права
                         .requestMatchers(HttpMethod.DELETE, "/api/admin/ads/**").hasRole("ADMIN")
+
+                        // Всё остальное требует авторизации
                         .anyRequest().authenticated()
-                )
-        ;
+                );
 
         return http.build();
     }
 
-    /**
-     * Источник конфигурации CORS.
-     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080", "http://localhost"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -58,10 +53,6 @@ public class SecurityConfig {
         return source;
     }
 
-    /**
-     * Бин PasswordEncoder для хеширования паролей пользователей.
-     * Нужен даже без JWT, чтобы хранить пароли в БД.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
