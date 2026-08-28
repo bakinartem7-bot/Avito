@@ -1,9 +1,7 @@
 package org.example.ads.service;
 
 import org.example.ads.dto.CommentDto;
-import org.example.ads.entity.Ad;
 import org.example.ads.entity.User;
-import org.example.ads.repository.AdRepository;
 import org.example.ads.repository.UserRepository;
 import org.example.ads.exception.AccessDeniedException;
 import org.example.ads.exception.NotFoundException;
@@ -12,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.math.BigDecimal;
@@ -20,11 +19,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Интеграционные тесты сервиса комментариев.
- * Проверяют CRUD, авторизацию, обработку ошибок.
- * Используют полную загрузку контекста Spring Boot и явную очистку данных.
- */
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class CommentServiceIntegrationTest {
@@ -33,63 +27,64 @@ class CommentServiceIntegrationTest {
     private CommentService commentService;
 
     @Autowired
-    private AdRepository adRepository;
-
-    @Autowired
     private UserRepository userRepository;
+
+    // Нужен для прямой вставки в БД, чтобы обойти проблемы с Hibernate
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     private UUID adId;
     private UUID authorId;
     private UUID otherUserId;
 
-    /**
-     * Подготовка тестовых данных перед каждым тестом.
-     * Используем UUID в email, чтобы избежать дублирования при параллельных запусках.
-     */
     @BeforeEach
     void setUp() {
-        // Создаём автора объявления
+        // 1. Создаём автора
         var author = new User();
         author.setEmail("author-" + UUID.randomUUID() + "@example.com");
         author.setPassword("pass_hash_test");
         author = userRepository.save(author);
         authorId = author.getId();
 
-        // Создаём другого пользователя
+        // 2. Создаём другого пользователя
         var other = new User();
         other.setEmail("other-" + UUID.randomUUID() + "@example.com");
         other.setPassword("pass_hash_other");
         other = userRepository.save(other);
         otherUserId = other.getId();
 
-        // Создаём тестовое объявление
-        var ad = new Ad();
-        ad.setAuthor(author); // <-- передаём объект с ID
-        ad.setTitle("Тестовый товар");
-        ad.setDescription("Описание товара");
-        ad.setPrice(BigDecimal.valueOf(100));
-        adId = adRepository.save(ad).getId();
+        // 3. Создаём объявление ЧЕРЕЗ ПРЯМОЙ SQL
+        // Мы НЕ используем new Ad() и adRepository.save().
+        // Это гарантирует, что author_id будет вставлен правильно.
+        adId = UUID.randomUUID();
+
+        String sql = """
+            INSERT INTO ads (
+                id, author_id, title, description, price, active, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+        """;
+
+        jdbcTemplate.update(sql,
+                adId,          // id
+                authorId,      // author_id (гарантированно не null)
+                "Тестовый товар",
+                "Описание товара",
+                BigDecimal.valueOf(100),
+                true
+        );
     }
 
-
-    /**
-     * Явная очистка данных после каждого теста.
-     * Это делает тесты полностью изолированными и предотвращает ошибки FK.
-     */
     @AfterEach
     void tearDown() {
-        // Удаляем комментарии (если они есть) — порядок важен из-за FK
-        // Если в Comment есть свой репозиторий, лучше использовать его.
-        // Здесь полагаемся на каскадное удаление либо удаляем вручную, если возможно.
-        // Для простоты и надёжности — удаляем объявление (удалит комментарии при cascade=REMOVE)
-        if (adRepository.existsById(adId)) {
-            adRepository.deleteById(adId);
+        // Удаляем через SQL, так как мы вставляли через SQL
+        if (adId != null) {
+            jdbcTemplate.update("DELETE FROM ads WHERE id = ?", adId);
         }
-        if (userRepository.existsById(authorId)) {
-            userRepository.deleteById(authorId);
+        if (authorId != null) {
+            jdbcTemplate.update("DELETE FROM users WHERE id = ?", authorId);
         }
-        if (userRepository.existsById(otherUserId)) {
-            userRepository.deleteById(otherUserId);
+        if (otherUserId != null) {
+            jdbcTemplate.update("DELETE FROM users WHERE id = ?", otherUserId);
         }
     }
 
@@ -142,7 +137,7 @@ class CommentServiceIntegrationTest {
         UUID commentId = comment.getId();
 
         assertThrows(AccessDeniedException.class, () -> {
-            commentService.deleteComment(commentId, authorId); // автор пытается удалить чужой комментарий
+            commentService.deleteComment(commentId, authorId);
         }, "Должно выбрасываться AccessDeniedException при попытке удалить чужой комментарий");
     }
 
