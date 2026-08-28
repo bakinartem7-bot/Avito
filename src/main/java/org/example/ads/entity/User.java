@@ -39,6 +39,7 @@ public class User {
     private Instant registeredAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @Column(length = 100)

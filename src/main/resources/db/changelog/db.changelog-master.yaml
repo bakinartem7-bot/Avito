@@ -1,9 +1,13 @@
 databaseChangeLog:
   - include:
       file: 001_create_users.yaml
+      relativeToChangelogFile: true
   - include:
       file: 002_create_ads.yaml
+      relativeToChangelogFile: true
   - include:
       file: 003_create_comments.yaml
+      relativeToChangelogFile: true
   - include:
-      file: add_user_profile_fields.yaml
+      file: ad_user_profile_fields.yaml
+      relativeToChangelogFile: true

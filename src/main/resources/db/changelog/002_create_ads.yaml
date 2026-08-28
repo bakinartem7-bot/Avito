@@ -22,6 +22,16 @@ databaseChangeLog:
                   constraints:
                     nullable: false
               - column:
+                  name: active
+                  type: boolean
+                  constraints:
+                    nullable: true
+              - column:
+                  name: image_url
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
                   name: price
                   type: numeric(10, 2)
                   constraints:
@@ -31,6 +41,10 @@ databaseChangeLog:
                   type: uuid
                   constraints:
                     nullable: false
+              - column:
+                  name: published_at
+                  type: timestamp
+                  defaultValueComputed: now()
               - column:
                   name: created_at
                   type: timestamp

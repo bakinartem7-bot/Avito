@@ -18,6 +18,11 @@ databaseChangeLog:
                     unique: true
                     nullable: false
               - column:
+                  name: username
+                  type: varchar(255)
+                  constraints:
+                    nullable: true
+              - column:
                   name: password_hash
                   type: varchar(255)
                   constraints:
@@ -28,5 +33,13 @@ databaseChangeLog:
                   defaultValue: "USER"
               - column:
                   name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
+              - column:
+                  name: registered_at
+                  type: timestamp
+                  defaultValueComputed: now()
+              - column:
+                  name: updated_at
                   type: timestamp
                   defaultValueComputed: now()
