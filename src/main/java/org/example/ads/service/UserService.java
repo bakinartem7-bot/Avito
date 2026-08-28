@@ -34,7 +34,6 @@ public class UserService {
         Assert.hasText(request.getEmail(), "Email must not be empty");
         Assert.hasText(request.getPassword(), "Password must not be empty");
 
-        // Проверка на существование по EMAIL (так как логин = email для HTTP Basic)
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("User with this email already exists");
         }
@@ -42,15 +41,9 @@ public class UserService {
         User user = new User();
         user.setEmail(request.getEmail()); // Важно: используем email как идентификатор
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-
-        // Если в User есть поля displayName/role по умолчанию - установи их здесь
-        // user.setDisplayName(request.getEmail());
-        // user.setRole(Role.USER);
-
         return userRepository.save(user);
     }
 
-    // --- Методы для безопасности (HTTP Basic) ---
 
     /**
      * Поиск по email - КРИТИЧНО для CustomUserDetailsService.
@@ -66,12 +59,10 @@ public class UserService {
      */
     @Deprecated
     public Optional<User> findByUsername(String username) {
-        // Можно реализовать через findByEmail, если username == email,
-        // или оставить пустым, если поле username вообще не используется.
+
         return Optional.empty();
     }
 
-    // --- Бизнес-логика профиля ---
 
     @Transactional
     public void changePassword(UUID userId, ChangePasswordDto dto) {
@@ -89,7 +80,6 @@ public class UserService {
 
         String encodedNewPassword = passwordEncoder.encode(dto.getNewPassword());
         user.setPasswordHash(encodedNewPassword);
-        // save не нужен, так как объект managed в транзакции
     }
 
     public Optional<User> getUserById(UUID id) {
@@ -110,6 +100,6 @@ public class UserService {
             user.setCity(dto.getCity());
         }
 
-        return user; // Spring Data JPA автоматически сохранит изменения в конце транзакции
+        return user;
     }
 }

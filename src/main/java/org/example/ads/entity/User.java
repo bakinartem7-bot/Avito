@@ -58,7 +58,6 @@ public class User {
         if (this.registeredAt == null) {
             this.registeredAt = Instant.now();
         }
-        // Если роль не задана — ставим USER (из enum)
         if (this.role == null) {
             this.role = Role.USER;
         }
@@ -67,8 +66,6 @@ public class User {
     public void setDisplayName(String displayName) {
         this.username = displayName;
     }
-
-    // Этот метод можно удалить или оставить пустым — он не нужен
     public void setPassword(String s) {
     }
 }

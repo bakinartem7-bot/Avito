@@ -32,21 +32,17 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults())
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll() // Регистрация открыта для всех
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
-
-                        // GET объявлений — публичный
-                        .requestMatchers(HttpMethod.GET, "/api/ads/**").permitAll()
-
-                        // POST/PUT/DELETE объявлений — только авторизованные
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/ads/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/ads/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/ads/**").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/ads/**").authenticated()
-
-                        // Админские операции
                         .requestMatchers(HttpMethod.DELETE, "/api/admin/ads/**").hasRole("ADMIN")
-
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/users/me").authenticated()
+                        .requestMatchers("/api/users/me/**").authenticated()
+                        .anyRequest().denyAll()
                 );
         return http.build();
     }
@@ -57,7 +53,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:8080"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(true); // Важно для передачи Basic Auth в браузере
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
