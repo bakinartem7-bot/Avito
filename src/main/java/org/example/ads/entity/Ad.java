@@ -4,23 +4,13 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal;
 import java.util.UUID;
 
-/**
- * Сущность объявления.
- * Соответствует таблице ads в базе данных (PostgreSQL / H2).
- * <p>
- * ВАЖНО: Для стабильной работы в двух БД (H2 и PostgreSQL) используется
- * GenerationType.UUID — это гарантирует генерацию ID на стороне приложения.
- * <p>
- * Для корректной работы с коллекцией comments в сервисах/DTO необходимо:
- * - либо загружать коллекцию через EntityGraph / JOIN FETCH в репозитории,
- * - либо не обращаться к ней вне транзакции (иначе LazyInitializationException).
- */
 @Entity
 @Table(name = "ads")
 @Data
@@ -28,10 +18,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Ad {
 
-    /**
-     * Уникальный идентификатор объявления.
-     * GenerationType.UUID предпочтительнее AUTO для UUID-ключей в Hibernate 6.
-     */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "UUID")
@@ -46,9 +32,21 @@ public class Ad {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
+    /**
+     * Связь с автором.
+     * Оставляем для JPA-запросов и удобной навигации (например, ad.getAuthor().getEmail()).
+     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "author_id", nullable = false)
+    @JoinColumn(name = "author_id", nullable = false, insertable = false, updatable = false)
+    // insertable/updatable=false — чтобы Hibernate не пытался писать сюда, а использовал authorId
     private User author;
+
+    /**
+     * Явное поле authorId для удобного сохранения без загрузки User.
+     * Мапится на тот же столбец author_id в БД.
+     */
+    @Column(name = "author_id", nullable = false)
+    private UUID authorId;
 
     @Column(name = "published_at", updatable = false)
     private Instant publishedAt;
@@ -65,14 +63,6 @@ public class Ad {
     @Column(name = "image_url", length = 1024)
     private String imageUrl;
 
-    /**
-     * Коллекция комментариев.
-     * - LAZY: не загружается автоматически, чтобы не делать лишних SELECT.
-     * - CascadeType.ALL + orphanRemoval=true: при удалении объявления удаляются и его комментарии.
-     * <p>
-     * Инициализация new ArrayList() здесь безопасна: Lombok @Data не переопределяет конструктор,
-     * и при загрузке из БД Hibernate заменит коллекцию на свою прокси-версию.
-     */
     @OneToMany(mappedBy = "ad", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 

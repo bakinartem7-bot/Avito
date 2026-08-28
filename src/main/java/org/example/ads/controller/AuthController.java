@@ -21,21 +21,7 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
-
         authService.register(request);
-        return ResponseEntity.ok(new AuthResponse("", ""));
-    }
-
-    /**
-     * Логин.
-     * В схеме БЕЗ JWT этот эндпоинт просто проверяет пароль.
-     * Сессия создаётся автоматически фильтром Spring Security при POST на /login,
-     * но если ты вызываешь этот метод явно — тоже возвращаем пустой ответ.
-     */
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
-        authService.authenticate(request);
-
         return ResponseEntity.ok(new AuthResponse("", ""));
     }
 }

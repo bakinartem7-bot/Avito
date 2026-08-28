@@ -1,8 +1,10 @@
 package org.example.ads.config;
 
+import org.example.ads.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,27 +18,36 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
+    private final CustomUserDetailsService userDetailsService;
+
+    public SecurityConfig(CustomUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .httpBasic(Customizer.withDefaults())
+                .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
-                        // Открытые эндпоинты
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
 
-                        // Публичный GET объявлений
+                        // GET объявлений — публичный
                         .requestMatchers(HttpMethod.GET, "/api/ads/**").permitAll()
 
-                        // Админские права
+                        // POST/PUT/DELETE объявлений — только авторизованные
+                        .requestMatchers(HttpMethod.POST, "/api/ads/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/ads/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/ads/**").authenticated()
+
+                        // Админские операции
                         .requestMatchers(HttpMethod.DELETE, "/api/admin/ads/**").hasRole("ADMIN")
 
-                        // Всё остальное требует авторизации
                         .anyRequest().authenticated()
                 );
-
         return http.build();
     }
 

@@ -3,7 +3,8 @@ package org.example.ads.controller;
 import org.example.ads.dto.ChangePasswordDto;
 import org.example.ads.dto.UserDto;
 import org.example.ads.dto.UserProfileUpdateDto;
-import org.example.ads.service.AdService;
+import org.example.ads.service.CurrentUserService;
+import org.example.ads.service.UserService; // <-- Правильный сервис, отдельный класс
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,50 +14,52 @@ import java.util.UUID;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private final AdService.UserService userService;
+    private final UserService userService;
+    private final CurrentUserService currentUserService;
 
-    public UserController(AdService.UserService userService) {
+    public UserController(UserService userService, CurrentUserService currentUserService) {
         this.userService = userService;
+        this.currentUserService = currentUserService;
     }
 
     /**
-     * GET /api/users/{id}
-     * Возвращает пользователя в виде DTO.
-     * ИСПРАВЛЕНО: Обработка Optional и создание UserDto (убирает ошибку incompatible types)
+     * GET /api/users/me
+     * Возвращает текущего авторизованного пользователя.
+     * Это безопаснее, чем GET /api/users/{id}, который открывает ID всех пользователей.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUser(@PathVariable UUID id) {
-        var userOpt = userService.getUserById(id);
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser() {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+        var userOpt = userService.getUserById(currentUserId);
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
-        UserDto dto = new UserDto(userOpt.get());
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(new UserDto(userOpt.get()));
     }
 
     /**
-     * PUT /api/users/{id}/profile
-     * Обновляет профиль (город, телефон, имя).
-     * ИСПРАВЛЕНО: Вызывает метод updateProfile, который мы добавили в сервис.
+     * PUT /api/users/me/profile
+     * Обновляет профиль текущего пользователя (город, телефон, имя).
+     * Защита: нельзя передать чужой ID.
      */
-    @PutMapping("/{id}/profile")
-    public ResponseEntity<UserDto> updateProfile(@PathVariable UUID id,
-                                                 @RequestBody UserProfileUpdateDto dto) {
-        var updatedUser = userService.updateProfile(id, dto);
+    @PutMapping("/me/profile")
+    public ResponseEntity<UserDto> updateMyProfile(@RequestBody UserProfileUpdateDto dto) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+        var updatedUser = userService.updateProfile(currentUserId, dto);
         return ResponseEntity.ok(new UserDto(updatedUser));
     }
 
     /**
-     * PUT /api/users/{id}/password
-     * Смена пароля.
-     * ИСПРАВЛЕНО: Вызывает метод changePassword, который проверяет старый пароль и хеширует новый.
+     * PUT /api/users/me/password
+     * Смена пароля текущего пользователя.
+     * Защита: нельзя сменить пароль другому пользователю.
      */
-    @PutMapping("/{id}/password")
-    public ResponseEntity<Void> changePassword(@PathVariable UUID id,
-                                               @RequestBody ChangePasswordDto dto) {
-        userService.changePassword(id, dto);
+    @PutMapping("/me/password")
+    public ResponseEntity<Void> changeMyPassword(@RequestBody ChangePasswordDto dto) {
+        UUID currentUserId = currentUserService.getCurrentUserId();
+        userService.changePassword(currentUserId, dto);
         return ResponseEntity.ok().build();
     }
 }

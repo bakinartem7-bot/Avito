@@ -1,8 +1,8 @@
 package org.example.ads.service;
 
 import org.example.ads.entity.User;
-import org.example.ads.entity.Role;
 import org.example.ads.repository.UserRepository;
+import org.example.ads.dto.AuthRequest;
 import org.example.ads.dto.ChangePasswordDto;
 import org.example.ads.dto.UserProfileUpdateDto;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +25,54 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Регистрация пользователя через DTO.
+     * Этот метод вызывает AuthController.
+     */
+    @Transactional
+    public User register(AuthRequest request) {
+        Assert.hasText(request.getEmail(), "Email must not be empty");
+        Assert.hasText(request.getPassword(), "Password must not be empty");
+
+        // Проверка на существование по EMAIL (так как логин = email для HTTP Basic)
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("User with this email already exists");
+        }
+
+        User user = new User();
+        user.setEmail(request.getEmail()); // Важно: используем email как идентификатор
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+
+        // Если в User есть поля displayName/role по умолчанию - установи их здесь
+        // user.setDisplayName(request.getEmail());
+        // user.setRole(Role.USER);
+
+        return userRepository.save(user);
+    }
+
+    // --- Методы для безопасности (HTTP Basic) ---
+
+    /**
+     * Поиск по email - КРИТИЧНО для CustomUserDetailsService.
+     * Spring Security будет искать пользователя именно по этому методу.
+     */
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    /**
+     * Устаревший метод поиска по username (оставлен для совместимости, если где-то используется).
+     * В схеме с email-логином лучше использовать findByEmail.
+     */
+    @Deprecated
+    public Optional<User> findByUsername(String username) {
+        // Можно реализовать через findByEmail, если username == email,
+        // или оставить пустым, если поле username вообще не используется.
+        return Optional.empty();
+    }
+
+    // --- Бизнес-логика профиля ---
+
     @Transactional
     public void changePassword(UUID userId, ChangePasswordDto dto) {
         Assert.notNull(userId, "userId must not be null");
@@ -41,7 +89,7 @@ public class UserService {
 
         String encodedNewPassword = passwordEncoder.encode(dto.getNewPassword());
         user.setPasswordHash(encodedNewPassword);
-        // userRepository.save(user); // @Transactional сохранит автоматически
+        // save не нужен, так как объект managed в транзакции
     }
 
     public Optional<User> getUserById(UUID id) {
@@ -62,6 +110,6 @@ public class UserService {
             user.setCity(dto.getCity());
         }
 
-        return user; // save произойдёт автоматически благодаря @Transactional
+        return user; // Spring Data JPA автоматически сохранит изменения в конце транзакции
     }
 }

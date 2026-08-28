@@ -1,16 +1,15 @@
 package org.example.ads.service;
 
-import org.example.ads.entity.User;
+import lombok.extern.slf4j.Slf4j;
 import org.example.ads.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 @Service
-@Transactional(readOnly = true)
+@Slf4j
 public class CurrentUserService {
 
     private final UserRepository userRepository;
@@ -19,23 +18,21 @@ public class CurrentUserService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Возвращает UUID текущего пользователя из контекста безопасности.
+     * Username в SecurityContext — это email (по нашей схеме аутентификации).
+     */
     public UUID getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {
-            throw new IllegalStateException("User not authenticated");
+            throw new IllegalStateException("User is not authenticated");
         }
 
-        String username = auth.getName(); // Это email, который мы использовали при регистрации
-
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new IllegalStateException("User not found in DB"));
-
-        return user.getId();
-    }
-
-    public boolean isAdmin() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+        String email = auth.getName();
+        return userRepository.findByEmail(email)
+                .map(u -> u.getId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "User not found for email: " + email
+                ));
     }
 }

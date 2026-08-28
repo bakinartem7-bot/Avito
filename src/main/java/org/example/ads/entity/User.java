@@ -31,7 +31,6 @@ public class User {
     @Column(unique = true, nullable = false, length = 255)
     private String email;
 
-    // role остаётся enum, Hibernate сам сохранит его как строку (VARCHAR)
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'USER'")
     private Role role;

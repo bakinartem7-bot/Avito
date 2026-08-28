@@ -9,10 +9,12 @@ public class AdDto {
     private UUID authorId;
     private String title;
     private String description;
-    private BigDecimal price;          // Единообразно с DTO
-    private String imageUrl;           // Добавлено для картинок
+    private BigDecimal price;
+    private String imageUrl;
     private Instant createdAt;
     private Instant updatedAt;
+    private Instant publishedAt;   // <-- добавлено поле
+    private boolean active;        // <-- добавлено поле
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -37,4 +39,11 @@ public class AdDto {
 
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
+
+    // Исправленные сеттеры
+    public void setPublishedAt(Instant publishedAt) { this.publishedAt = publishedAt; }
+    public Instant getPublishedAt() { return publishedAt; }
+
+    public void setActive(boolean active) { this.active = active; }
+    public boolean isActive() { return active; }
 }
