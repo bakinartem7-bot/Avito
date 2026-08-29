@@ -23,8 +23,6 @@
         <testcontainers.version>1.19.8</testcontainers.version>
         <jjwt.version>0.12.3</jjwt.version>
         <springdoc.version>2.3.0</springdoc.version>
-        <hibernate.version>6.6.1.Final</hibernate.version>
-        <!-- JaCoCo для отчётов по покрытию (важно для диплома) -->
         <jacoco.version>0.8.13</jacoco.version>
     </properties>
 
@@ -57,21 +55,19 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-              <!-- Java JWT: API -->
-        <!-- Java JWT: API -->
+
+        <!-- Java JWT -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>${jjwt.version}</version>
         </dependency>
-        <!-- Java JWT: Implementation -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
             <version>${jjwt.version}</version>
             <scope>runtime</scope>
         </dependency>
-        <!-- Java JWT: Jackson for JSON processing -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
@@ -79,7 +75,7 @@
             <scope>runtime</scope>
         </dependency>
 
-              <!-- Actuator -->
+        <!-- Actuator -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -98,7 +94,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 Database (только для тестов и локальной разработки) -->
+        <!-- H2 Database -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -120,7 +116,7 @@
             <version>${springdoc.version}</version>
         </dependency>
 
-        <!-- Commons IO (для работы с файлами в AdImageService) -->
+        <!-- Commons IO -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
@@ -134,7 +130,7 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Testcontainers (для интеграционных тестов с реальной БД) -->
+        <!-- Testcontainers -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
@@ -150,23 +146,6 @@
     </dependencies>
 
     <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <includes>
-                    <include>application.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <excludes>
-                    <exclude>application.properties</exclude>
-                </excludes>
-            </resource>
-        </resources>
-
         <plugins>
             <!-- Плагин компилятора с поддержкой Lombok annotation processor -->
             <plugin>
@@ -186,7 +165,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Spring Boot plugin (для сборки и запуска) -->
+            <!-- Spring Boot plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -200,19 +179,17 @@
                 </configuration>
             </plugin>
 
-            <!-- JaCoCo: сбор покрытия и генерация HTML-отчёта -->
+            <!-- JaCoCo -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <executions>
-                    <!-- Подготовка агента для сбора данных о покрытии -->
                     <execution>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
                     </execution>
-                    <!-- Генерация отчёта после тестов -->
                     <execution>
                         <id>report</id>
                         <phase>verify</phase>

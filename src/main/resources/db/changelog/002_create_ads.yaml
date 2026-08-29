@@ -44,11 +44,11 @@ databaseChangeLog:
               - column:
                   name: published_at
                   type: timestamp
-                  defaultValueComputed: now()
+                  defaultValue: now()
               - column:
                   name: created_at
                   type: timestamp
-                  defaultValueComputed: now()
+                  defaultValue: now()
               - column:
                   name: updated_at
                   type: timestamp

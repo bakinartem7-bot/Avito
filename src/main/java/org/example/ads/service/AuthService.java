@@ -4,12 +4,14 @@ import org.example.ads.entity.User;
 import org.example.ads.entity.Role;
 import org.example.ads.repository.UserRepository;
 import org.example.ads.dto.AuthRequest;
+import org.example.ads.exception.InvalidEmailException;
+import org.example.ads.exception.UserAlreadyExistsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-import java.util.logging.Logger; // Используем стандартный логгер, чтобы не зависеть от Lombok
+import java.util.logging.Logger;
 
 @Service
 @Transactional
@@ -32,31 +34,29 @@ public class AuthService {
         // 1. Проверка на null и пустоту
         if (email == null || email.isBlank()) {
             logger.severe("Попытка регистрации с пустым email");
-            throw new IllegalArgumentException("Email не может быть пустым");
+            throw new InvalidEmailException("Email не может быть пустым");
         }
 
         // 2. Проверка на существование пользователя
         if (userRepository.findByEmail(email).isPresent()) {
             logger.warning("Попытка повторной регистрации для email: " + email);
-            throw new IllegalArgumentException("User with this email already exists");
+            throw new UserAlreadyExistsException("Пользователь с таким email уже существует");
         }
 
         // 3. Создание пользователя
         User user = new User();
-
-        // Генерируем ID вручную
         user.setId(UUID.randomUUID());
-
         user.setEmail(email);
 
-        // ИСПРАВЛЕННАЯ ЛОГИКА: безопасное получение имени до символа @
+        // Безопасное получение имени до символа @
         String usernamePart;
         int atIndex = email.indexOf('@');
         if (atIndex > 0) {
             usernamePart = email.substring(0, atIndex);
         } else {
-            // Если символа @ нет (невалидный email), берем весь email или дефолтное значение
-            usernamePart = email;
+            // Если символа @ нет — считаем email невалидным
+            logger.warning("Попытка регистрации с некорректным email (нет символа @): " + email);
+            throw new InvalidEmailException("Некорректный формат email");
         }
         user.setUsername(usernamePart);
 

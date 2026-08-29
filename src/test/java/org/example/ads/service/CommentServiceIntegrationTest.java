@@ -42,14 +42,14 @@ class CommentServiceIntegrationTest {
         // 1. Создаём автора
         var author = new User();
         author.setEmail("author-" + UUID.randomUUID() + "@example.com");
-        author.setPassword("pass_hash_test");
+        author.setPasswordHash("pass_hash_test");
         author = userRepository.save(author);
         authorId = author.getId();
 
         // 2. Создаём другого пользователя
         var other = new User();
         other.setEmail("other-" + UUID.randomUUID() + "@example.com");
-        other.setPassword("pass_hash_other");
+        other.setPasswordHash("pass_hash_other");
         other = userRepository.save(other);
         otherUserId = other.getId();
 

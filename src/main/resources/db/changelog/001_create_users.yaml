@@ -34,12 +34,12 @@ databaseChangeLog:
               - column:
                   name: created_at
                   type: timestamp
-                  defaultValueComputed: now()
+                  defaultValue: now()
               - column:
                   name: registered_at
                   type: timestamp
-                  defaultValueComputed: now()
+                  defaultValue: now()
               - column:
                   name: updated_at
                   type: timestamp
-                  defaultValueComputed: now()
+                  defaultValue: now()

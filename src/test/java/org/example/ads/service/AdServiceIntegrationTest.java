@@ -48,7 +48,7 @@ class AdServiceIntegrationTest {
     private UUID createUser(String email) {
         var user = new User();
         user.setEmail(email);
-        user.setPassword("hashed-pass");
+        user.setPasswordHash("hashed-pass");
         return userRepository.save(user).getId();
     }
 
