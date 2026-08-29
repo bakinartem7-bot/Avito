@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -26,6 +27,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Интеграционные тесты для AdController.
+ * Проверяют создание, чтение, обновление и удаление объявлений, а также контроль доступа.
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
@@ -34,24 +39,33 @@ class AdControllerIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private UserRepository userRepository;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     private UUID ownerId;
     private String ownerEmail;
     private UUID otherId;
     private String otherEmail;
 
+    /**
+     * Подготовка тестовых пользователей перед каждым тестом.
+     * Пароли хешируются через PasswordEncoder для соответствия реальной логике приложения.
+     */
     @BeforeEach
     void setUp() {
         ownerEmail = "owner-" + UUID.randomUUID() + "@example.com";
         var owner = new User();
         owner.setEmail(ownerEmail);
-        owner.setPassword("hashed");
+        owner.setUsername(ownerEmail.split("@")[0]);
+        owner.setPasswordHash(passwordEncoder.encode("123456"));
+        owner.setRole(org.example.ads.entity.Role.USER);
         ownerId = userRepository.save(owner).getId();
 
         otherEmail = "other-" + UUID.randomUUID() + "@example.com";
         var other = new User();
         other.setEmail(otherEmail);
-        other.setPassword("hashed2");
+        other.setUsername(otherEmail.split("@")[0]);
+        other.setPasswordHash(passwordEncoder.encode("123456"));
+        other.setRole(org.example.ads.entity.Role.USER);
         otherId = userRepository.save(other).getId();
     }
 
@@ -70,7 +84,6 @@ class AdControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        // ✅ ИСПРАВЛЕНИЕ: Явно декодируем байты как UTF-8, чтобы убрать кракозябры
         String body = new String(result.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8);
         assertThat(body).isNotEmpty();
 
@@ -102,7 +115,6 @@ class AdControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // ✅ Явная UTF-8 декодировка
         String body = new String(result.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8);
         AdDto responseDto = objectMapper.readValue(body, AdDto.class);
 
@@ -138,7 +150,6 @@ class AdControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // ✅ Явная UTF-8 декодировка
         String body = new String(result.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8);
         AdDto responseDto = objectMapper.readValue(body, AdDto.class);
         assertThat(responseDto.getTitle()).isEqualTo("Новый заголовок");
@@ -190,6 +201,14 @@ class AdControllerIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    /**
+     * Вспомогательный метод для создания объявления в тестах.
+     *
+     * @param title  Заголовок объявления
+     * @param price  Цена
+     * @param authorId ID автора объявления
+     * @return DTO созданного объявления
+     */
     private AdDto createAd(String title, BigDecimal price, UUID authorId) {
         try {
             AdCreateDto dto = new AdCreateDto();
@@ -208,7 +227,6 @@ class AdControllerIntegrationTest {
                     .andExpect(status().isCreated())
                     .andReturn();
 
-            // ✅ Явная UTF-8 декодировка в хелпере тоже
             String body = new String(result.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8);
             return objectMapper.readValue(body, AdDto.class);
         } catch (Exception e) {
