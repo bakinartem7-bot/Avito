@@ -1,60 +1,59 @@
 package org.example.ads.controller;
 
 import org.example.ads.dto.AuthRequest;
-import org.example.ads.dto.AuthResponse;
+import org.example.ads.dto.LoginRequest;
 import org.example.ads.service.AuthService;
 import org.example.ads.service.JwtService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * REST-контроллер для операций аутентификации и регистрации.
- */
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthService authService;
     private final AuthenticationManager authenticationManager;
+    private final AuthService authService;
     private final JwtService jwtService;
 
-    public AuthController(AuthService authService,
-                          AuthenticationManager authenticationManager,
+    public AuthController(AuthenticationManager authenticationManager,
+                          AuthService authService,
                           JwtService jwtService) {
-        this.authService = authService;
         this.authenticationManager = authenticationManager;
+        this.authService = authService;
         this.jwtService = jwtService;
     }
 
-    /**
-     * Регистрирует нового пользователя.
-     * Возвращает 201 Created без тела — это правильный REST-стандарт для POST /register.
-     */
+    // Регистрация
     @PostMapping("/register")
     public ResponseEntity<Void> register(@RequestBody AuthRequest request) {
         authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(201).build(); // 201 Created
     }
 
-    /**
-     * Выполняет аутентификацию и возвращает JWT-токен.
-     * В ответе только accessToken — без лишних строк и refreshToken.
-     */
+    // Логин
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtService.generateToken(userDetails);
 
-        // Передаём только токен. Конструктор AuthResponse теперь должен принимать один параметр.
-        return ResponseEntity.ok(new AuthResponse(token));
+        Map<String, String> response = new HashMap<>();
+        response.put("accessToken", token);
+        return ResponseEntity.ok(response);
     }
 }

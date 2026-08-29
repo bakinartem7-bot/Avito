@@ -27,26 +27,33 @@ public class UserService {
 
     /**
      * Регистрация пользователя через DTO.
-     * Этот метод вызывает AuthController.
      */
     @Transactional
     public User register(AuthRequest request) {
-        Assert.hasText(request.getEmail(), "Email must not be empty");
-        Assert.hasText(request.getPassword(), "Password must not be empty");
+        Assert.hasText(request.email(), "Email must not be empty");
+        Assert.hasText(request.password(), "Password must not be empty");
 
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
             throw new IllegalArgumentException("User with this email already exists");
         }
 
         User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setId(UUID.randomUUID()); // если ID не генерируется автоматически
+        user.setEmail(request.email());
+
+        // username можно сделать из email (до @) или оставить null, если не используется
+        int atIndex = request.email().indexOf('@');
+        String username = (atIndex > 0) ? request.email().substring(0, atIndex) : request.email();
+        user.setUsername(username);
+
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setRole(org.example.ads.entity.Role.USER); // если есть enum Role
+
         return userRepository.save(user);
     }
 
-
     /**
-     * Поиск по email - КРИТИЧНО для CustomUserDetailsService.
+     * Поиск по email — КРИТИЧНО для CustomUserDetailsService.
      * Spring Security будет искать пользователя именно по этому методу.
      */
     public Optional<User> findByEmail(String email) {
@@ -54,15 +61,12 @@ public class UserService {
     }
 
     /**
-     * Устаревший метод поиска по username (оставлен для совместимости, если где-то используется).
-     * В схеме с email-логином лучше использовать findByEmail.
+     * Устаревший метод поиска по username (оставлен для совместимости).
      */
     @Deprecated
     public Optional<User> findByUsername(String username) {
-
         return Optional.empty();
     }
-
 
     @Transactional
     public void changePassword(UUID userId, ChangePasswordDto dto) {
@@ -80,12 +84,14 @@ public class UserService {
 
         String encodedNewPassword = passwordEncoder.encode(dto.getNewPassword());
         user.setPasswordHash(encodedNewPassword);
+        // save не нужен: в транзакционном методе Spring Data сам сделает flush при выходе
     }
 
     public Optional<User> getUserById(UUID id) {
         return userRepository.findById(id);
     }
 
+    @Transactional
     public User updateProfile(UUID id, UserProfileUpdateDto dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
@@ -100,6 +106,6 @@ public class UserService {
             user.setCity(dto.getCity());
         }
 
-        return user;
+        return userRepository.save(user); // обязательно сохраняем изменения
     }
 }
