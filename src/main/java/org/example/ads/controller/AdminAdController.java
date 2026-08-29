@@ -8,6 +8,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * REST-контроллер для административных операций над объявлениями.
+ * <p>
+ * Содержит операции, доступные только пользователям с ролью ADMIN.
+ * Проверка прав осуществляется через аннотацию @PreAuthorize.
+ */
 @RestController
 @RequestMapping("/api/admin/ads")
 @RequiredArgsConstructor
@@ -16,6 +22,15 @@ public class AdminAdController {
 
     private final AdminAdService adminAdService;
 
+    /**
+     * Удаляет любое объявление по идентификатору.
+     * <p>
+     * Доступно только администраторам. Проверка роли выполнена на уровне контроллера.
+     * Не проверяет принадлежность объявления конкретному пользователю.
+     *
+     * @param id UUID объявления
+     * @return ResponseEntity со статусом 204 (No Content)
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAd(@PathVariable UUID id) {
         adminAdService.deleteAnyAd(id); // безопасно: проверка роли уже выполнена

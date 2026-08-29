@@ -31,7 +31,6 @@ public class AuthService {
         User user = new User();
         user.setId(UUID.randomUUID());
         user.setEmail(request.getEmail());
-        // Если в User нет поля username — удали эту строку
         user.setUsername(request.getEmail().split("@")[0]);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER);

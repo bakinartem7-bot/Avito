@@ -9,5 +9,5 @@ public class ChangePasswordDto {
     private String currentPassword;
 
     @NotBlank
-    private String newPassword;
+    private String newPassword; //смена пароля
 }

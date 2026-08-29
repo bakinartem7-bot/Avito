@@ -39,7 +39,7 @@ public class UserService {
         }
 
         User user = new User();
-        user.setEmail(request.getEmail()); // Важно: используем email как идентификатор
+        user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         return userRepository.save(user);
     }

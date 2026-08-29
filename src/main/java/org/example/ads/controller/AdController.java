@@ -17,6 +17,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * REST-контроллер для управления объявлениями.
+ * <p>
+ * Предоставляет API для создания, чтения, обновления и удаления объявлений.
+ * Все операции, кроме публичных GET, требуют авторизации.
+ * Права на изменение/удаление проверяются по совпадению authorId.
+ */
 @RestController
 @RequestMapping("/api/ads")
 @Validated
@@ -27,8 +34,13 @@ public class AdController {
     private final CurrentUserService currentUserService;
 
     /**
-     * Создать объявление.
-     * Требует авторизации (HTTP Basic). Автор определяется из контекста.
+     * Создаёт новое объявление.
+     * <p>
+     * Требует авторизации. Автор объявления определяется из контекста текущего пользователя.
+     * Возвращает созданный объект AdDto с HTTP-кодом 201.
+     *
+     * @param dto DTO с данными для создания объявления
+     * @return ResponseEntity с созданным AdDto
      */
     @PostMapping
     public ResponseEntity<AdDto> createAd(@RequestBody @Valid AdCreateDto dto) {
@@ -37,7 +49,12 @@ public class AdController {
     }
 
     /**
-     * Получить все объявления (публичный GET).
+     * Получает список всех объявлений.
+     * <p>
+     * Публичный эндпоинт (не требует авторизации).
+     * Возвращает список AdDto.
+     *
+     * @return список объявлений в формате AdDto
      */
     @GetMapping
     public List<AdDto> getAllAds() {
@@ -45,8 +62,11 @@ public class AdController {
     }
 
     /**
-     * Получить свои объявления.
-     * Требует авторизации.
+     * Получает объявления текущего пользователя.
+     * <p>
+     * Требует авторизации. Возвращает список объявлений, принадлежащих текущему пользователю.
+     *
+     * @return ResponseEntity со списком AdDto
      */
     @GetMapping("/mine")
     public ResponseEntity<List<AdDto>> getMyAds() {
@@ -55,8 +75,12 @@ public class AdController {
     }
 
     /**
-     * Получить одно объявление по ID.
-     * Публичный GET.
+     * Получает одно объявление по идентификатору.
+     * <p>
+     * Публичный эндпоинт. Возвращает AdDto, если найдено, или 404, если нет.
+     *
+     * @param id UUID объявления
+     * @return ResponseEntity с AdDto или статусом 404
      */
     @GetMapping("/{id}")
     public ResponseEntity<AdDto> getAd(@PathVariable UUID id) {
@@ -65,8 +89,14 @@ public class AdController {
     }
 
     /**
-     * Обновить объявление.
-     * Требует авторизации и проверки прав (только своё объявление).
+     * Обновляет существующее объявление.
+     * <p>
+     * Требует авторизации и проверки прав: пользователь может обновлять только свои объявления.
+     * Возвращает обновлённый AdDto или 404/403 при ошибках.
+     *
+     * @param id  UUID объявления
+     * @param dto DTO с новыми данными
+     * @return ResponseEntity с обновлённым AdDto или соответствующим статусом ошибки
      */
     @PutMapping("/{id}")
     public ResponseEntity<AdDto> updateAd(@PathVariable UUID id, @RequestBody @Valid AdUpdateDto dto) {
@@ -76,8 +106,12 @@ public class AdController {
     }
 
     /**
-     * Удалить объявление.
-     * Требует авторизации и проверки прав.
+     * Удаляет объявление.
+     * <p>
+     * Требует авторизации и проверки прав. Возвращает 204 при успехе, 404 если не найдено, 403 если нет прав.
+     *
+     * @param id UUID объявления
+     * @return ResponseEntity без тела с соответствующим HTTP-статусом
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAd(@PathVariable UUID id) {

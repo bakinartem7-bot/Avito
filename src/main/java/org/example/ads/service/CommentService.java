@@ -28,12 +28,12 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final AdRepository adRepository;
-    private final UserRepository userRepository; // <-- Добавляем зависимость
+    private final UserRepository userRepository;
 
     public CommentService(
             CommentRepository commentRepository,
             AdRepository adRepository,
-            UserRepository userRepository // <-- Конструктор обновлён
+            UserRepository userRepository
     ) {
         this.commentRepository = commentRepository;
         this.adRepository = adRepository;

@@ -1,4 +1,4 @@
-package org.example.ads.security;
+package org.example.ads.service;
 
 import org.example.ads.entity.Ad;
 import org.example.ads.exception.NotFoundException;

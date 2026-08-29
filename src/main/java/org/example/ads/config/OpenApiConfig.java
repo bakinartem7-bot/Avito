@@ -8,9 +8,21 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Конфигурация OpenAPI (Swagger) для API сайта объявлений.
+ * <p>
+ * Настраивает общую информацию об API (название, версия, описание),
+ * а также схему безопасности на основе Bearer-токенов (JWT).
+ * Добавляет в спецификацию эндпоинты Swagger UI и правила авторизации.
+ */
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Создаёт и настраивает экземпляр {@link OpenAPI} с метаданными и схемой безопасности.
+     *
+     * @return сконфигурированный объект OpenAPI
+     */
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()

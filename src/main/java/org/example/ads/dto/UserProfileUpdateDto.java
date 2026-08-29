@@ -7,5 +7,5 @@ import lombok.Data;
 public class UserProfileUpdateDto {
     private String displayName;
     private String phone;
-    private String city;
+    private String city; //обновление профиля
 }

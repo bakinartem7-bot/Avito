@@ -12,7 +12,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     boolean existsByEmail(@Param("email") String email);
 
-    // Если ты всё-таки используешь поле username отдельно от email:
     Optional<User> findByUsername(@Param("username") String username);
     boolean existsByUsername(@Param("username") String username);
 }

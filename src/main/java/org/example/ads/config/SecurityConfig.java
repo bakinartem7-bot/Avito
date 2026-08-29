@@ -15,6 +15,16 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Конфигурация безопасности Spring Security для API сайта объявлений.
+ * <p>
+ * Настраивает:
+ * - отключение CSRF для REST API,
+ * - CORS-политику для фронтенда,
+ * - правила авторизации по URL-путям,
+ * - аутентификацию через Basic Auth и кастомный UserDetailsService,
+ * - кодировщик паролей (BCrypt).
+ */
 @Configuration
 public class SecurityConfig {
 
@@ -24,6 +34,18 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Определяет цепочку фильтров безопасности ({@link SecurityFilterChain}).
+     * <p>
+     * Настраивает правила доступа:
+     * - открытые эндпоинты: регистрация, Swagger, H2-консоль,
+     * - защищённые эндпоинты объявлений: требуют авторизации,
+     * - админские операции: требуют роли ADMIN.
+     *
+     * @param http объект конфигурации HttpSecurity
+     * @return сконфигурированная цепочка фильтров безопасности
+     * @throws Exception при ошибке конфигурации
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -47,6 +69,15 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Конфигурирует источник CORS-настроек.
+     * <p>
+     * Разрешает запросы с localhost:3000 и localhost:8080,
+     * поддерживает все основные HTTP-методы и заголовки,
+     * разрешает передачу учётных данных (credentials).
+     *
+     * @return источник конфигурации CORS
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -60,6 +91,12 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * Предоставляет бин кодировщика паролей на основе алгоритма BCrypt.
+     * Используется для хеширования паролей при регистрации пользователей.
+     *
+     * @return экземпляр PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
