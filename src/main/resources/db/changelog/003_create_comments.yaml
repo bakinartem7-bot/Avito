@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-comments-table
+      author: student
+      changes:
+        - createTable:
+            tableName: comments
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: ad_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: author_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: now()
+              - column:
+                  name: updated_at
+                  type: timestamp
+              - addForeignKeyConstraint:
+                  baseTableName: comments
+                  baseColumnNames: ad_id
+                  referencedTableName: ads
+                  referencedColumnNames: id
+                  onDelete: CASCADE
+                  onUpdate: CASCADE
+              - addForeignKeyConstraint:
+                  baseTableName: comments
+                  baseColumnNames: author_id
+                  referencedTableName: users
+                  referencedColumnNames: id
+                  onDelete: CASCADE
+                  onUpdate: CASCADE

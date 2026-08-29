@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/001_create_users.yaml
+  - include:
+      file: db/changelog/002_create_ads.yaml
+  - include:
+      file: db/changelog/003_create_comments.yaml
+  - include:
+      file: db/changelog/ad_user_profile_fields.yaml
